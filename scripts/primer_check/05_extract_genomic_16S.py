@@ -2,7 +2,9 @@ import re
 import os
 
 INPUT_DIR = "strain_genbank"
-OUTPUT = "cultured_strain_16S_v2.fasta"
+OUTPUT = "cultured_strain_16S_with_flanks.fasta"
+
+FLANK = 50
 
 
 def reverse_complement(seq):
@@ -50,13 +52,11 @@ for filename in sorted(os.listdir(INPUT_DIR)):
         if not line.startswith("     rRNA"):
             continue
 
-        # Find the end of THIS feature.
+        # Find end of this feature annotation
         j = i + 1
 
         while j < len(lines):
 
-            # A new GenBank feature begins when columns 6-20
-            # contain a feature name.
             if (
                 lines[j].startswith("     ")
                 and len(lines[j]) > 20
@@ -69,8 +69,6 @@ for filename in sorted(os.listdir(INPUT_DIR)):
 
         feature_block = "".join(lines[i:j])
 
-        # Only accept this exact rRNA feature if its own
-        # annotation identifies it as 16S.
         if '/product="16S ribosomal RNA' not in feature_block:
             continue
 
@@ -85,9 +83,22 @@ for filename in sorted(os.listdir(INPUT_DIR)):
         start = int(nums[0])
         end = int(nums[-1])
 
-        seq = genome[start - 1:end]
+        if not is_complement:
 
-        if is_complement:
+            # GenBank coordinates are 1-based
+            extract_start = max(0, start - 1 - FLANK)
+            extract_end = min(len(genome), end + FLANK)
+
+            seq = genome[extract_start:extract_end]
+
+        else:
+
+            # For a reverse-strand gene, genomic "upstream"
+            # is toward increasing coordinates.
+            extract_start = max(0, start - 1 - FLANK)
+            extract_end = min(len(genome), end + FLANK)
+
+            seq = genome[extract_start:extract_end]
             seq = reverse_complement(seq)
 
         records.append(
@@ -107,10 +118,10 @@ with open(OUTPUT, "w") as out:
         out.write(header + "\n")
 
         for i in range(0, len(seq), 80):
-            out.write(seq[i:i + 80] + "\n")
+            out.write(seq[i:i+80] + "\n")
 
 
-print("Extracted", len(records), "16S sequences")
+print("Extracted", len(records), "16S regions with flanks")
 print("Wrote", OUTPUT)
 
 for strain, copy_number, location, seq in records:
