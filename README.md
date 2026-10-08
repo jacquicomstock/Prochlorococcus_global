@@ -93,7 +93,7 @@ followed by:
 
     scripts/02_dada2.R
 
-[Explain downstream workflow.]
+[THIS WILL BE FILLED OUT MORE AS ANALYSES PROGRESS]
 
 ## Data availability
 
