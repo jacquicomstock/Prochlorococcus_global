@@ -1,0 +1,23 @@
+module load python/miniforge-25.3.0
+source "$(conda info --base)/etc/profile.d/conda.sh"
+
+conda create -n phyloassigner \
+    -c conda-forge \
+    -c bioconda \
+    python=3.9 \
+    pandas \
+    biopython \
+    hmmer=3.3.2 \
+    pplacer \
+    gappa \
+    taxtastic \
+    raxml \
+    -y
+
+conda activate phyloassigner
+
+cd /project/azworden/users/jcomstock/M197_V1V2
+
+cp -r \
+/project/azworden/databases/PhyloAssigner \
+PhyloAssigner_local
